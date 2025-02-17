@@ -29,6 +29,6 @@ entries:
     - https://github.com/btungut/azure-devops-agent-on-kubernetes
     type: application
     urls:
-    - https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline.git/azure-devops-agent-2.1.0.tgz
+    - https://DCx14.github.io/SEPTEO-OPENSOURCE/azure-agent-pipeline/azure-devops-agent-2.1.0.tgz
     version: 2.1.0
 generated: "2025-02-17T12:39:54.011350082+01:00"
