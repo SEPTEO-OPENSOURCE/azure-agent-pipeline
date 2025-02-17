@@ -36,8 +36,8 @@ image:
 
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 2
+    memory: 5120Mi
   requests:
     cpu: 100m
     memory: 128Mi
@@ -51,7 +51,7 @@ volumeMounts: []
   #   mountPath: "/var/run/docker.sock"
 
 buildkit:
-  enabled: false
+  enabled: true
 
 serviceAccount:
   # The name of the service account to use.
