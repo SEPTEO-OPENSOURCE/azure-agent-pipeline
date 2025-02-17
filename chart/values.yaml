@@ -29,9 +29,9 @@ replicaCount: 1
 
 image:
   # registry: docker.io
-  repository: btungut/azure-devops-agent
-  pullPolicy: IfNotPresent
-  tag: "3.248.0-stable-v2.1.0"
+  repository: 42069789/azure-agent
+  pullPolicy: Always
+  tag: "latest"
   pullSecrets: []
 
 resources:
