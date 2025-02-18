@@ -29,13 +29,13 @@ It is pretty straight-forward process with sufficient scope. Please choose **one
 
 1. First you need to add repository _(if you haven't done yet before)_
 ```bash
-helm repo add btungut https://btungut.github.io
+helm repo add septeo-ado https://septeo-opensource.github.io/azure-agent-pipeline/
 ```
 
 1. Install the helm chart with specified PAT and other required parameters
 
 ```bash
-helm install {RELEASE-NAME} btungut/azure-devops-agent \
+helm install {RELEASE-NAME} septeo-ado/azure-devops-agent \
   --set agent.pat={PAT} \
   --set agent.organizationUrl=https://dev.azure.com/{YOUR-ORG} \
   --set agent.pool="YOUR-AGENT-POOL-NAME" \
@@ -45,7 +45,7 @@ helm install {RELEASE-NAME} btungut/azure-devops-agent \
 2. Install the helm chart with existing secret that stores PAT
 
 ```bash
-helm install {RELEASE-NAME} btungut/azure-devops-agent \
+helm install {RELEASE-NAME} septeo-ado/azure-devops-agent \
   --set agent.patSecret={SECRET-NAME} \
   --set agent.patSecretKey="pat" \
   --set agent.organizationUrl=https://dev.azure.com/{YOUR-ORG} \
@@ -59,6 +59,65 @@ Run the following snippet to uninstall the release:
 
 ```bash
 helm delete {RELEASE-NAME}
+```
+## BUIDKIT exemple Pipeline
+
+```bash
+stages:
+  - stage: build_and_push_front
+    pool:
+      name: kube-pprod
+    displayName: build & push app
+    jobs:
+      - job: Dependency
+        steps:
+          - checkout: git://myproject/myproject@${{parameters.triggerbranch}}
+          - checkout: git://myproject/myproject-Docker-Build@Cron
+            path: "s/Cron"
+          - checkout: git://myproject/myproject-Docker-Build@Backend
+            path: "s/Backend"
+
+          - task: Docker@2
+            inputs:
+              command: login
+              containerRegistry: 'registry-myproject'
+          - script: |
+             # sleep 300
+              (
+                buildctl --addr tcp://buildkitd:6942 \
+                  build \
+                  --frontend dockerfile.v0 \
+                  --local context=. \
+                  --local dockerfile=Cron \
+                  --output=type=image,name=registry.myproject.fr/myproject-portail/septeo-cron:$(finalTag),push=true &
+
+                PID1=$!
+
+                buildctl --addr tcp://buildkitd:6942 \
+                  build \
+                  --frontend dockerfile.v0 \
+                  --local context=. \
+                  --local dockerfile=Backend \
+                  --output=type=image,name=registry.myproject.fr/myproject-portail/myproject-portail:$(finalTag),push=true &
+
+                PID2=$!
+
+                wait $PID1
+                STATUS1=$?
+
+                wait $PID2
+                STATUS2=$?
+
+                if [ $STATUS1 -ne 0 ] || [ $STATUS2 -ne 0 ]; then
+                  echo "❌ Erreur : L'une des constructions a échoué !" >&2
+                  exit 1
+                fi
+
+                echo "✅ Construction réussie !"
+              )
+
+            displayName: "Build & push frontend"
+
 ```
 
 ## docker CLI support
