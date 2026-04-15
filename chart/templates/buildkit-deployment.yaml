@@ -61,6 +61,8 @@ spec:
             # https://github.com/moby/buildkit/issues/879#issuecomment-1240347038
             - mountPath: /home/user/.local/share/buildkit
               name: buildkitd
+          resources:
+            {{ - toYaml .Values.buildkit.resources | nindent 12 }}
       volumes:
         - name: buildkitd
           emptyDir: {}
