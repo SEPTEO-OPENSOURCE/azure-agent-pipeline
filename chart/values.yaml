@@ -52,6 +52,13 @@ volumeMounts: []
 
 buildkit:
   enabled: true
+  resources:
+    limits:
+      cpu: 2
+      memory: 5120Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
 serviceAccount:
   # The name of the service account to use.
