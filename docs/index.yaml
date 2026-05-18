@@ -31,5 +31,34 @@ entries:
     urls:
     - https://septeo-opensource.github.io/azure-agent-pipeline/azure-devops-agent-2.1.0.tgz
     version: 2.1.0
+  - annotations:
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |-
+        - name: GitHub
+          url: https://github.com/btungut/azure-devops-agent-on-kubernetes
+    apiVersion: v2
+    appVersion: 3.248.0-stable-v2.1.0
+    description: Dockerized build agent for Azure DevOps
+    digest: a8cc0959dd17611d64b0bff917f6339cc4913de1f8453e3ce9b6438524b17a26
+    home: https://github.com/btungut/azure-devops-agent-on-kubernetes
+    keywords:
+    - azure devops
+    - build agent
+    - dockerized agent
+    - azure devops agent on kubernetes
+    - azure devops agent
+    - kubernetes
+    - devops
+    maintainers:
+    - email: burak.tungut@microsoft.com
+      name: Burak Tungut
+    name: azure-devops-agent
+    sources:
+    - https://github.com/btungut/azure-devops-agent-on-kubernetes
+    urls:
+    - https://septeo-opensource.github.io/azure-agent-pipeline/azure-devops-agent-2.1.0.tgz
+    type: application
+    version: 2.1.1
 generated: "2025-02-17T12:39:54.011350082+01:00"
 
