@@ -14,12 +14,14 @@ spec:
     metadata:
       labels:
         app: buildkitd
-      annotations:
-        container.apparmor.security.beta.kubernetes.io/buildkitd: unconfined
     # see buildkit/docs/rootless.md for caveats of rootless mode
     spec:
+      securityContext:
+
       containers:
         - name: buildkitd
+          securityContext:
+              allowPrivilegeEscalation: false
           image: moby/buildkit:master-rootless
           args:
             - --addr
@@ -51,7 +53,12 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 30
           resources:
-          {{- toYaml .Values.buildkit.resources | nindent 12 }}
+            limits:
+              cpu: 2
+              memory: 5120Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -62,6 +69,8 @@ spec:
                 - ALL
             appArmorProfile:
               type: RuntimeDefault
+            seccompProfile:
+              type: RuntimeDefault
           ports:
             - containerPort: 1234
           volumeMounts:
@@ -71,8 +80,6 @@ spec:
             # https://github.com/moby/buildkit/issues/879#issuecomment-1240347038
             - mountPath: /home/user/.local/share/buildkit
               name: buildkitd
-          resources:
-            {{ - toYaml .Values.buildkit.resources | nindent 12 }}
       volumes:
         - name: buildkitd
           emptyDir: {}
