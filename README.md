@@ -5,6 +5,7 @@ The easiest and most effective method for creating and managing Azure DevOps age
 
 | Helm Version | Docker Tag | Agent Version |
 |--------------|------------|---------------|
+| 2.1.1        | 3.248.0-stable-v2.1.0    | 3.248.0x       |
 | 2.1.0        | 3.248.0-stable-v2.1.0    | 3.248.0x       |
 
 
