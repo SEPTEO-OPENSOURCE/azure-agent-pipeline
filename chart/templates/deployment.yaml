@@ -36,8 +36,6 @@ spec:
             capabilities:
               drop:
                 - ALL
-            appArmorProfile:
-              type: RuntimeDefault
             seccompProfile:
               type: RuntimeDefault
           image: "{{ $img }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
