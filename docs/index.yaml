@@ -40,7 +40,7 @@ entries:
     apiVersion: v2
     appVersion: 3.248.0-stable-v2.1.1
     description: Dockerized build agent for Azure DevOps
-    digest: 9aee6604d22b09d0a5da29bb20a72c9c539645df0d76f6521cdccd8366f7ccff
+    digest: 8677a520da0760b9c692fccd61e8b4f5cc8d727ff6352a51653e237a8c31c6b1
     home: https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline
     keywords:
     - azure devops
