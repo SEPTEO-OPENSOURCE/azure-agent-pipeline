@@ -70,7 +70,7 @@ spec:
               drop:
                 - ALL
             seccompProfile:
-              type: unconfined
+              type: Unconfined
           ports:
             - containerPort: 1234
           volumeMounts:
