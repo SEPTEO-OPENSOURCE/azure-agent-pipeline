@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app: buildkitd
+      annotations:
+        container.apparmor.security.beta.kubernetes.io/buildkitd: unconfined
     # see buildkit/docs/rootless.md for caveats of rootless mode
     spec:
       securityContext:
@@ -68,7 +70,7 @@ spec:
               drop:
                 - ALL
             seccompProfile:
-              type: RuntimeDefault
+              type: unconfined
           ports:
             - containerPort: 1234
           volumeMounts:
