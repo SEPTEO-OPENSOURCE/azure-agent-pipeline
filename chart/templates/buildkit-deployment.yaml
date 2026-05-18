@@ -27,13 +27,18 @@ spec:
             - --addr
             - tcp://0.0.0.0:6942
             - --oci-worker-no-process-sandbox
-          # the probe below will only work after Release v0.6.3
+          # the probe below is to avoid keyrings of pods buildkit to pass the limit and be not functional, so that they restart
+          # when they about to reach the limit
           readinessProbe:
             exec:
               command:
-                - buildctl
-                - debug
-                - workers
+              - sh
+              - -c
+              - >
+                [ "$(
+                  awk -F: '$1==1000 {print $2}' /proc/key-users \
+                  | awk '{print $1}'
+                )" -le 195 ]
             initialDelaySeconds: 5
             periodSeconds: 30
           # the probe below will only work after Release v0.6.3
@@ -45,13 +50,18 @@ spec:
                 - workers
             initialDelaySeconds: 5
             periodSeconds: 30
+          resources:
+          {{- toYaml .Values.buildkit.resources | nindent 12 }}
           securityContext:
-            # Needs Kubernetes >= 1.19
-            seccompProfile:
-              type: Unconfined
-            # To change UID/GID, you need to rebuild the image
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
             runAsUser: 1000
             runAsGroup: 1000
+            capabilities:
+              drop:
+                - ALL
+            appArmorProfile:
+              type: RuntimeDefault
           ports:
             - containerPort: 1234
           volumeMounts:

@@ -77,6 +77,12 @@ affinity: {}
 podLabels: {}
 podAnnotations: {}
 podSecurityContext:
+  allowPrivilegeEscalation: false
   runAsNonRoot: true
   runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
+  appArmorProfile:
+    type: RuntimeDefault
 securityContext: {}
