@@ -56,6 +56,8 @@ entries:
     name: azure-devops-agent
     sources:
     - https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline
+    urls:
+    - https://septeo-opensource.github.io/azure-agent-pipeline/azure-devops-agent-2.1.1.tgz
     type: application
     version: 2.1.1
 generated: "2025-02-17T12:39:54.011350082+01:00"
