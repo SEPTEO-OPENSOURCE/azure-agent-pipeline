@@ -76,7 +76,8 @@ tolerations: []
 affinity: {}
 podLabels: {}
 podAnnotations: {}
-podSecurityContext:
+podSecurityContext: {}
+securityContext:
   allowPrivilegeEscalation: false
   runAsNonRoot: true
   runAsUser: 1000
@@ -85,4 +86,5 @@ podSecurityContext:
       - ALL
   appArmorProfile:
     type: RuntimeDefault
-securityContext: {}
+  seccompProfile:
+    type: RuntimeDefault
