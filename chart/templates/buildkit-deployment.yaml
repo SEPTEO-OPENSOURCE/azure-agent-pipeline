@@ -17,7 +17,7 @@ spec:
     # see buildkit/docs/rootless.md for caveats of rootless mode
     spec:
       securityContext:
-
+        runAsNonRoot: true
       containers:
         - name: buildkitd
           securityContext:
