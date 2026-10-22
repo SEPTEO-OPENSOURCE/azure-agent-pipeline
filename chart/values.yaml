@@ -29,7 +29,7 @@ replicaCount: 1
 
 image:
   # registry: docker.io
-  repository: 42069789/azure-agent
+  repository: registry.septeo.fr/septeo-ado/azure-agent:v1.0
   pullPolicy: Always
   tag: "latest"
   pullSecrets: []
