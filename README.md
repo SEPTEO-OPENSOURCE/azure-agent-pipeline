@@ -3,10 +3,11 @@
 The easiest and most effective method for creating and managing Azure DevOps agents on Kubernetes, without the need to spend time and effort wrestling with settings! Scale-out as much as is necessary and demolish them gracefully.
 
 
-| Helm Version | Docker Tag | Agent Version |
+| Helm Version | Docker Tag | Agent Version | Buildkit
 |--------------|------------|---------------|
-| 2.1.1        | 3.248.0-stable-v2.1.0    | 3.248.0x       |
-| 2.1.0        | 3.248.0-stable-v2.1.0    | 3.248.0x       |
+| 2.1.2        | v1.0    | 5.280.0      |0.34.0|
+| 2.1.1        | 3.248.0-stable-v2.1.0    | 3.248.0x       |0.24.0|
+| 2.1.0        | 3.248.0-stable-v2.1.0    | 3.248.0x       ||
 
 
 ## Prerequisites
