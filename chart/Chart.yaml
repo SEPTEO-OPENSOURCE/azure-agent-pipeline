@@ -1,26 +1,36 @@
 apiVersion: v2
 name: azure-devops-agent
-description: Dockerized build agent for Azure DevOps
+description: Septeo self-hosted Azure DevOps agent on Kubernetes, with a rootless BuildKit daemon for image builds - maintained by the Septeo Integration & Innovation team
 type: application
-version: 2.1.2
-appVersion: "3.248.0-stable-v2.1.0"
+version: 3.0.0
+appVersion: "v1.0"
 keywords:
   - azure devops
   - build agent
   - dockerized agent
   - azure devops agent on kubernetes
   - azure devops agent
+  - buildkit
   - kubernetes
   - devops
-home: "https://github.com/btungut/azure-devops-agent-on-kubernetes"
+  - septeo
+home: "https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline"
 sources:
-  - "https://github.com/btungut/azure-devops-agent-on-kubernetes"
+  - "https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline"
+  - "https://github.com/SEPTEO-OPENSOURCE/azure-devops-agent-on-kubernetes"
 maintainers:
-  - name: "Burak Tungut"
-    email: "burak.tungut@microsoft.com"
+  - name: "Septeo - Integration & Innovation"
+  - name: "Dylan Caudoux"
+    email: "dylan.caudoux@septeo.com"
+  - name: "Jonathan Diouf"
+    email: "jonathan.diouf@septeo.com"
 annotations:
-  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/containsSecurityUpdates: "true"
   artifacthub.io/license: MIT
   artifacthub.io/links: |-
-    - name: GitHub
+    - name: Helm chart
+      url: https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline
+    - name: Docker image sources
+      url: https://github.com/SEPTEO-OPENSOURCE/azure-devops-agent-on-kubernetes
+    - name: Upstream project (btungut)
       url: https://github.com/btungut/azure-devops-agent-on-kubernetes
