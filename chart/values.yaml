@@ -76,7 +76,10 @@ tolerations: []
 affinity: {}
 podLabels: {}
 podAnnotations: {}
-podSecurityContext: {}
+# Defaults are compliant with the "restricted" Pod Security Standard.
+# No appArmorProfile: AppArmor is not available on our clusters.
+podSecurityContext:
+  runAsNonRoot: true
 securityContext:
   allowPrivilegeEscalation: false
   runAsNonRoot: true
@@ -84,7 +87,5 @@ securityContext:
   capabilities:
     drop:
       - ALL
-  appArmorProfile:
-    type: RuntimeDefault
   seccompProfile:
     type: RuntimeDefault
