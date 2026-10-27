@@ -55,12 +55,7 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 30
           resources:
-            limits:
-              cpu: 2
-              memory: 5120Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
+            {{- toYaml .Values.buildkit.resources | nindent 12 }}
           securityContext:
             # Needs Kubernetes >= 1.19
             seccompProfile:
