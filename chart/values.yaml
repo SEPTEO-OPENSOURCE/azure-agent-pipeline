@@ -52,6 +52,7 @@ volumeMounts: []
 
 buildkit:
   enabled: true
+  replicaCount: 3
   resources:
     limits:
       cpu: 2
@@ -59,6 +60,25 @@ buildkit:
     requests:
       cpu: 100m
       memory: 128Mi
+  # Routeur TCP HAProxy (leastconn). Désactivé par défaut.
+  # Si enabled: true, les pipelines DOIVENT utiliser tcp://buildkit-lb:6942
+  # (et non plus tcp://buildkitd:6942).
+  lb:
+    enabled: false
+    replicaCount: 1
+    serverSlots: 10
+    image:
+      repository: haproxy
+      tag: "2.9-alpine"
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
 
 serviceAccount:
   # The name of the service account to use.

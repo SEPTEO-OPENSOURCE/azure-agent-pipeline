@@ -1,8 +1,8 @@
 apiVersion: v2
 name: azure-devops-agent
-description: Septeo self-hosted Azure DevOps agent on Kubernetes, with a rootless BuildKit daemon for image builds - maintained by the Septeo Integration & Innovation team
+description: Septeo self-hosted Azure DevOps agent on Kubernetes, with rootless BuildKit and optional HAProxy leastconn load balancing — maintained by the Septeo Integration & Innovation team
 type: application
-version: 3.0.0
+version: 3.1.0
 appVersion: "v1.0"
 keywords:
   - azure devops
@@ -11,6 +11,7 @@ keywords:
   - azure devops agent on kubernetes
   - azure devops agent
   - buildkit
+  - haproxy
   - kubernetes
   - devops
   - septeo

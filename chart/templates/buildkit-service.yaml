@@ -1,4 +1,5 @@
 {{- if .Values.buildkit.enabled }}
+{{- /* Accès direct aux démons (comportement historique, défaut) */}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -7,8 +8,46 @@ metadata:
   name: buildkitd
 spec:
   ports:
-    - port: 6942
+    - name: buildkit
+      port: 6942
+      targetPort: 6942
       protocol: TCP
   selector:
     app: buildkitd
+{{- if .Values.buildkit.lb.enabled }}
+---
+{{- /* Headless : résolution DNS des pods pour HAProxy */}}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: buildkitd
+  name: buildkitd-headless
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: false
+  ports:
+    - name: buildkit
+      port: 6942
+      targetPort: 6942
+      protocol: TCP
+  selector:
+    app: buildkitd
+---
+{{- /* Point d'entrée leastconn — adresse pipelines : tcp://buildkit-lb:6942 */}}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: buildkit-lb
+  name: buildkit-lb
+spec:
+  ports:
+    - name: buildkit
+      port: 6942
+      targetPort: 6942
+      protocol: TCP
+  selector:
+    app: buildkit-lb
+{{- end }}
 {{- end }}

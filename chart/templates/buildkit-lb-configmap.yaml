@@ -1,0 +1,40 @@
+{{- if and .Values.buildkit.enabled .Values.buildkit.lb.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: buildkit-lb
+  labels:
+    app: buildkit-lb
+data:
+  haproxy.cfg: |
+    global
+      log stdout format raw local0
+      maxconn 4096
+
+    defaults
+      mode tcp
+      log global
+      option clitcpka
+      option srvtcpka
+      timeout connect 5s
+      # Builds longs : ne pas couper la session buildctl
+      timeout client  24h
+      timeout server  24h
+      timeout check   5s
+
+    resolvers k8s
+      parse-resolv-conf
+      hold valid 10s
+      hold obsolete 30s
+      accepted_payload_size 8192
+
+    frontend buildkit_in
+      bind *:6942
+      default_backend buildkit_backends
+
+    backend buildkit_backends
+      # Répartit vers le démon qui a le moins de connexions TCP actives
+      balance leastconn
+      option tcp-check
+      server-template bk {{ .Values.buildkit.lb.serverSlots }} {{ printf "buildkitd-headless.%s.svc.cluster.local" .Release.Namespace }}:6942 resolvers k8s resolve-prefer ipv4 init-addr none check inter 5s fall 3 rise 2
+{{- end }}

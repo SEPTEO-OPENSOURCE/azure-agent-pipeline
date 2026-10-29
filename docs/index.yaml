@@ -12,7 +12,7 @@
   appVersion: v1.0
   created: "2026-10-27T11:30:00+01:00"
   description: Septeo self-hosted Azure DevOps agent on Kubernetes, with a rootless BuildKit daemon for image builds - maintained by the Septeo Integration & Innovation team
-  digest: 56ad96fc6f1b906acc297088a5e0f410551fcbe13427f6309ae01f25ba06f6b7
+  digest: 66b1d9f808c110a5227df69857341e979ec72cc1525ccd5b66b5d0089071c286
   home: https://github.com/SEPTEO-OPENSOURCE/azure-agent-pipeline
   keywords:
   - azure devops
@@ -36,5 +36,5 @@
   - https://github.com/SEPTEO-OPENSOURCE/azure-devops-agent-on-kubernetes
   type: application
   urls:
-  - https://septeo-opensource.github.io/azure-agent-pipeline/azure-devops-agent-3.0.0.tgz
-  version: 3.0.0
+  - https://septeo-opensource.github.io/azure-agent-pipeline/azure-devops-agent-3.1.0.tgz
+  version: 3.1.0

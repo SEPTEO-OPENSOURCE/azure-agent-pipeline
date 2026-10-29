@@ -1,0 +1,65 @@
+{{- if and .Values.buildkit.enabled .Values.buildkit.lb.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildkit-lb
+  labels:
+    app: buildkit-lb
+spec:
+  replicas: {{ .Values.buildkit.lb.replicaCount }}
+  selector:
+    matchLabels:
+      app: buildkit-lb
+  template:
+    metadata:
+      labels:
+        app: buildkit-lb
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/buildkit-lb-configmap.yaml") . | sha256sum }}
+    spec:
+      {{- with .Values.buildkit.lb.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: haproxy
+          image: "{{ .Values.buildkit.lb.image.repository }}:{{ .Values.buildkit.lb.image.tag }}"
+          imagePullPolicy: {{ .Values.buildkit.lb.image.pullPolicy }}
+          args:
+            - -f
+            - /usr/local/etc/haproxy/haproxy.cfg
+          ports:
+            - name: buildkit
+              containerPort: 6942
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: buildkit
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: buildkit
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.buildkit.lb.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /usr/local/etc/haproxy
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: buildkit-lb
+{{- end }}

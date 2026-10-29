@@ -6,9 +6,10 @@
 
 Maintenu par l'équipe **Intégration & Innovation** de [Septeo](https://www.septeo.com)
 
-![Helm chart](https://img.shields.io/badge/chart-3.0.0-0F1689?logo=helm&logoColor=white)
+![Helm chart](https://img.shields.io/badge/chart-3.1.0-0F1689?logo=helm&logoColor=white)
 ![Agent Azure DevOps](https://img.shields.io/badge/agent-5.280.0-0078D7?logo=azuredevops&logoColor=white)
 ![BuildKit](https://img.shields.io/badge/BuildKit-0.34.0-2496ED?logo=docker&logoColor=white)
+![HAProxy LB](https://img.shields.io/badge/BuildKit%20LB-opt--in%20leastconn-orange?logo=haproxy&logoColor=white)
 ![Pod Security](https://img.shields.io/badge/PSS-restricted%20(agent)-success)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -17,6 +18,8 @@ Maintenu par l'équipe **Intégration & Innovation** de [Septeo](https://www.sep
 ---
 
 Ce chart déploie sur Kubernetes un pool d'agents Azure DevOps auto-hébergés, prêts à l'emploi, accompagnés d'un démon **BuildKit rootless** pour construire et pousser des images de conteneurs depuis les pipelines, sans Docker-in-Docker ni accès au socket Docker du nœud.
+
+Optionnellement (désactivé par défaut), un **routeur TCP HAProxy** (`balance leastconn`) peut répartir les builds entre plusieurs démons BuildKit.
 
 Les agents s'enregistrent automatiquement dans le pool Azure DevOps au démarrage et se désenregistrent proprement à l'arrêt : il suffit de jouer sur `replicaCount` pour monter ou descendre en charge.
 
@@ -43,8 +46,12 @@ flowchart LR
     subgraph NS[Namespace Kubernetes]
         AGENT[Deployment<br/>azure-devops-agent<br/>replicaCount pods]
         SVC[Service<br/>buildkitd:6942]
-        BK[Deployment<br/>buildkitd rootless<br/>3 pods]
-        AGENT -- "buildctl --addr tcp://buildkitd:6942" --> SVC --> BK
+        LBSVC[Service<br/>buildkit-lb:6942<br/>si lb.enabled]
+        LB[Deployment<br/>buildkit-lb<br/>HAProxy leastconn]
+        HEAD[Service headless<br/>buildkitd-headless]
+        BK[Deployment<br/>buildkitd rootless<br/>N pods]
+        AGENT -- "défaut: tcp://buildkitd:6942" --> SVC --> BK
+        AGENT -. "si LB: tcp://buildkit-lb:6942" .-> LBSVC --> LB --> HEAD --> BK
     end
 
     BK -- "push" --> REG[(Registre d'images)]
@@ -55,19 +62,59 @@ flowchart LR
 | `Deployment` agent | Pods de l'agent Azure DevOps (image `registry.septeo.fr/septeo-ado/azure-agent`) |
 | `Secret` | PAT Azure DevOps, créé uniquement si `agent.pat` est renseigné |
 | `ServiceAccount` | Compte de service des agents (désactivable) |
-| `Deployment` + `Service` `buildkitd` | Démon BuildKit rootless exposé sur le port `6942`, activé par défaut (`buildkit.enabled`) |
+| `Deployment` + `Service` `buildkitd` | Démons BuildKit rootless sur le port `6942` (`buildkit.enabled`) — accès direct, répartition kube aléatoire |
+| `Service` `buildkitd-headless` | DNS des pods BuildKit (uniquement si `buildkit.lb.enabled`) |
+| `Deployment` + `Service` `buildkit-lb` | Routeur HAProxy leastconn (uniquement si `buildkit.lb.enabled`) |
 
 ## Matrice de compatibilité
 
-| Chart | Image de l'agent | Agent Azure DevOps | Client BuildKit |
-|-------|------------------|--------------------|-----------------|
-| **3.0.0** | `registry.septeo.fr/septeo-ado/azure-agent:v1.0` | **5.280.0** | **0.34.0** |
-| 2.1.1 | `42069789/azure-agent:latest` | 3.248.0 | 0.19.0 |
-| 2.1.0 | `42069789/azure-agent:latest` | 3.248.0 | 0.19.0 |
+| Chart | Image de l'agent | Agent Azure DevOps | Client BuildKit | LB BuildKit |
+|-------|------------------|--------------------|-----------------|-------------|
+| **3.1.0** | `registry.septeo.fr/septeo-ado/azure-agent:v1.0` | **5.280.0** | **0.34.0** | Optionnel (HAProxy leastconn, **off** par défaut) |
+| **3.0.0** | `registry.septeo.fr/septeo-ado/azure-agent:v1.0` | **5.280.0** | **0.34.0** | — |
+| 2.1.1 | `42069789/azure-agent:latest` | 3.248.0 | 0.19.0 | — |
+| 2.1.0 | `42069789/azure-agent:latest` | 3.248.0 | 0.19.0 | — |
+
+| Composant | 2.1.x | → | 3.0.0 / 3.1.0 |
+|-----------|-------|---|----------------|
+| Agent Azure DevOps | 3.248.0 | → | **5.280.0** |
+| URL download agent | `vstsagentpackage.azureedge.net` | → | **`download.agent.dev.azure.com`** |
+| Client BuildKit | 0.19.0 | → | **0.34.0** |
+| Registre image | Docker Hub | → | **`registry.septeo.fr`** |
+| Tag image | `latest` | → | **`v1.0`** |
+| OpenJDK | — | → | **17** |
+| LB BuildKit | — | → | **opt-in** depuis **3.1.0** (`buildkit.lb.enabled`) |
 
 Les sources de l'image sont dans le dépôt [SEPTEO-OPENSOURCE/azure-devops-agent-on-kubernetes](https://github.com/SEPTEO-OPENSOURCE/azure-devops-agent-on-kubernetes).
 
 ## Nouveautés
+
+### 3.1.0 — octobre 2026
+
+**Load balancer BuildKit optionnel** (HAProxy `balance leastconn`), **désactivé par défaut**.
+
+> **Warning — changement d'adresse obligatoire si le LB est activé**
+>
+> - Par défaut (`buildkit.lb.enabled: false`) : continuer avec  
+>   `buildctl --addr tcp://buildkitd:6942`  
+>   (répartition Kubernetes aléatoire sur les pods BuildKit, comme en 3.0.0).
+> - Si vous passez `buildkit.lb.enabled: true` : **breaking change côté pipelines** — il faut pointer vers le Service du routeur :  
+>   `buildctl --addr tcp://buildkit-lb:6942`  
+>   L'ancienne adresse `tcp://buildkitd:6942` contourne le LB (accès direct aux démons) et **n'utilise pas** le leastconn.
+> - Mettre à jour **tous** les jobs / templates / variables (`BUILDKIT_HOST`, etc.) qui appellent `buildctl` avant d'activer le LB en production.
+> - `buildkit.lb.serverSlots` doit rester **≥** `buildkit.replicaCount`.
+
+Le LB envoie chaque nouvelle connexion TCP vers le démon qui a le moins de connexions actives (proxy de « job en cours », pas de la RAM/CPU).
+
+```yaml
+buildkit:
+  enabled: true
+  replicaCount: 3
+  lb:
+    enabled: true          # opt-in
+    replicaCount: 1
+    serverSlots: 10
+```
 
 ### 3.0.0 — octobre 2026
 
@@ -212,6 +259,9 @@ resources:
 
 buildkit:
   enabled: true
+  replicaCount: 3
+  # lb.enabled: false  # défaut — garder tcp://buildkitd:6942
+  # lb.enabled: true   # alors OBLIGATOIRE : tcp://buildkit-lb:6942 dans les pipelines
 ```
 
 ```bash
@@ -228,49 +278,55 @@ Les agents se désenregistrent du pool Azure DevOps à l'arrêt des pods.
 
 ## Construire des images avec BuildKit
 
-Quand `buildkit.enabled` vaut `true`, les agents joignent le démon BuildKit via le Service `buildkitd` du même namespace. Exemple d'étape de pipeline qui construit deux images en parallèle et les pousse :
+Quand `buildkit.enabled` vaut `true`, les agents joignent BuildKit dans le même namespace.
+
+| Mode | `buildkit.lb.enabled` | Adresse `buildctl` |
+|------|----------------------|--------------------|
+| Défaut (3.0 / 3.1) | `false` | `tcp://buildkitd:6942` |
+| Avec leastconn | `true` | **`tcp://buildkit-lb:6942`** (obligatoire) |
+
+> **Warning :** activer le LB sans changer l'adresse des pipelines laisse les builds sur `buildkitd` (accès direct) : le routeur HAProxy n'est alors **pas** utilisé.
+
+Exemple (LB désactivé — défaut) :
 
 ```yaml
-stages:
-  - stage: build_and_push
-    displayName: Build & push
-    pool:
-      name: kube-pprod
-    jobs:
-      - job: build
-        steps:
-          - checkout: self
+- script: |
+    set -e
+    buildctl --addr tcp://buildkitd:6942 build \
+      --frontend dockerfile.v0 \
+      --local context=. \
+      --local dockerfile=Backend \
+      --output type=image,name=registry.myproject.fr/myproject/backend:$(Build.BuildId),push=true
+  displayName: Build & push
+```
 
-          - task: Docker@2
-            displayName: Login registre
-            inputs:
-              command: login
-              containerRegistry: "registry-myproject"
+Exemple (LB activé) :
 
-          - script: |
-              set -e
+```yaml
+- script: |
+    set -e
+    # Breaking si vous migrez depuis buildkitd : nouvelle adresse
+    buildctl --addr tcp://buildkit-lb:6942 build \
+      --frontend dockerfile.v0 \
+      --local context=. \
+      --local dockerfile=Backend \
+      --output type=image,name=registry.myproject.fr/myproject/backend:$(Build.BuildId),push=true &
+    PID_BACK=$!
 
-              buildctl --addr tcp://buildkitd:6942 build \
-                --frontend dockerfile.v0 \
-                --local context=. \
-                --local dockerfile=Backend \
-                --output type=image,name=registry.myproject.fr/myproject/backend:$(Build.BuildId),push=true &
-              PID_BACK=$!
+    buildctl --addr tcp://buildkit-lb:6942 build \
+      --frontend dockerfile.v0 \
+      --local context=. \
+      --local dockerfile=Cron \
+      --output type=image,name=registry.myproject.fr/myproject/cron:$(Build.BuildId),push=true &
+    PID_CRON=$!
 
-              buildctl --addr tcp://buildkitd:6942 build \
-                --frontend dockerfile.v0 \
-                --local context=. \
-                --local dockerfile=Cron \
-                --output type=image,name=registry.myproject.fr/myproject/cron:$(Build.BuildId),push=true &
-              PID_CRON=$!
-
-              wait $PID_BACK && wait $PID_CRON
-            displayName: Build & push des images
+    wait $PID_BACK && wait $PID_CRON
+  displayName: Build & push via HAProxy leastconn
 ```
 
 La tâche `Docker@2 login` écrit les identifiants dans `~/.docker/config.json`, que `buildctl` réutilise pour pousser l'image.
 
-> Les ressources BuildKit portent des noms fixes (`buildkitd`). Une seule release avec `buildkit.enabled: true` peut donc être installée par namespace.
+> Les ressources BuildKit portent des noms fixes (`buildkitd`, `buildkit-lb`). Une seule release avec `buildkit.enabled: true` peut donc être installée par namespace.
 
 ## Paramètres
 
@@ -331,7 +387,14 @@ Renseigner **soit** `agent.pat`, **soit** `agent.patSecret`.
 | Paramètre | Description | Défaut |
 |-----------|-------------|--------|
 | `buildkit.enabled` | Déployer le démon BuildKit rootless et son Service | `true` |
+| `buildkit.replicaCount` | Nombre de pods `buildkitd` | `3` |
 | `buildkit.resources` | Requests / limits de chaque pod `buildkitd` | requests `100m` / `128Mi`, limits `2` / `5120Mi` |
+| `buildkit.lb.enabled` | Déployer HAProxy leastconn (**opt-in** ; implique `tcp://buildkit-lb:6942`) | `false` |
+| `buildkit.lb.replicaCount` | Réplicas du routeur | `1` |
+| `buildkit.lb.serverSlots` | Emplacements backends HAProxy (≥ `replicaCount`) | `10` |
+| `buildkit.lb.image.repository` | Image du routeur | `haproxy` |
+| `buildkit.lb.image.tag` | Tag du routeur | `2.9-alpine` |
+| `buildkit.lb.resources` | Requests / limits du LB | `50m`/`64Mi` → `200m`/`128Mi` |
 
 ## Sécurité
 

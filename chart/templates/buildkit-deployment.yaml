@@ -6,7 +6,7 @@ metadata:
     app: buildkitd
   name: buildkitd
 spec:
-  replicas: 3
+  replicas: {{ .Values.buildkit.replicaCount }}
   selector:
     matchLabels:
       app: buildkitd
@@ -64,7 +64,8 @@ spec:
             runAsUser: 1000
             runAsGroup: 1000
           ports:
-            - containerPort: 1234
+            - name: buildkit
+              containerPort: 6942
           volumeMounts:
             # Dockerfile has `VOLUME /home/user/.local/share/buildkit` by default too,
             # but the default VOLUME does not work with rootless on Google's Container-Optimized OS
